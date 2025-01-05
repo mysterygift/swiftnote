@@ -65,7 +65,7 @@ KV pairs can be removed by setting the key equal to nil/using the .removeValue(f
 
 # Iterating Over a Dict
 
-Each item is returned as a tuple (key, value), which can be decomposed into temporary constants or variables. See below.
+Each item is returned as a tuple (key, value), which can be decomposed into temporary constants or variables. See below. We can also pass a tuple to the for-in loop, allowing us to access both the key AND the value in any executed code.
 
 ```swift
 for airportCode in airport.keys { // the .keys property allows us to only access the KEYS of a dict.
