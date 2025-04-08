@@ -12,7 +12,7 @@ var emptySet = Set<String>() // another way of creating an empty set of type Str
 
 Why do sets have better performance than arrays? In order for something to go into a set, it must conform to "Hashable" protocol. Basic Swift types conform to Hashable automatically, but when creating custom data types the protocol need to be integrated for each object.
 
-If something is Hashable it is given a hashValue.
+If something is Hashable it is given a hashValue, which is an Int that's the same for all objects that compare equally (e.g. if a==b, then hashA==hashB).
 
 For example, looking at the array we set earlier:
 
@@ -68,3 +68,4 @@ houseAnimals.isSubset(of: farmAnimals) // returns True
 farmAnimals.isSuperset(of: houseAnimals) // returns True
 farmAnimals.isDisjoint(with: cityAnimals) // returns True
 ```
+

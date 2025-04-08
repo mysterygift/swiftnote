@@ -77,3 +77,44 @@ print(message) // prints "Message"
 Switch expressions can be used as a value that a function or closure returns, and can also throw errors instead of providing a value for a given case.
 
 Switch statements do NOT require "break" statements as they automatically stop executing as soon as the first matching case is completed. (More details on Break to follow).
+
+You can use also additional conditional statements with cases, and bind values passed into switches to temporary variables. Below is an example.
+
+```swift
+let point = (2, 0)
+switch point {
+case (let x, 0): // binds the first value of the tuple to constant x which is temporary
+    print("on the x-axis with an x value of \(x)")
+case (0, let y):
+    print("on the y-axis with a y value of \(y)")
+case (let x, y):
+    print("somewhere else at (\(x), \(y))")
+    
+} // prints "on the x-axis with an x value of 2"
+```
+
+We could also use ranges for each of these cases, e.g. case (-2...3, -2...4), or we can input _ for one of the positions in the tuple to indicate any value can be there e.g. (_, 3).
+
+These can also be used with compound cases:
+
+```swift
+var x = 3
+case (let x, 0), (0, let x):
+    print("x = \(x)") // prints "x = 3"
+```
+
+# Where
+
+Switch cases can use a where clause to check for additional conditions. Below is an example where we categorise points on a cartesian plane:
+
+```swift
+let point = (1, -1)
+switch point {
+case let (x, y) where x == y:
+    print("(\(x), \(y)) is on the line x == y")
+case let (x, y) where x == -y:
+    print("(\(x), \(y)) is on the line x == -y")
+case let (x, y):
+    print("(\(x), \(y)) is just some arbitrary point")
+} // prints "(1, -1) is on the line x == -y"
+```
