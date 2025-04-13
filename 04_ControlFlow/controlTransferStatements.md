@@ -97,6 +97,8 @@ print("Game over!")
 
 Guard statements execute depending on the value of an expression. You use them to require conditionals to return true in order for the code to execute. Unlike if statements, guard statements ALWAYS have else clauses.
 
+Guard statements MUST be inside either a function, a method or a closure.
+
 These improve code readability as you can write code that's the expected outcome without wrapping it in an else block, and you can keep code that handles violated requirements right next to it. Below is an example of an implementation:
 
 ```swift

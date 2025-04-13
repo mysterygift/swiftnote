@@ -12,6 +12,7 @@ You can get the account of an array using arrayName.count
 Specific elements in an array can be accessed using, arrayName.first/arrayName.last. YOU CAN USE AN OPTIONAL HERE IF THE ARRAY IS EMPTY TO AVOID A CRASH! (e.g. arrayName.?last)
 arrayName.append(23)
 arrayName.insert (VALUE, at: INDEX)
+arrayName.prefix(n) returns up to the nth index of an array.
 
 You cannot use negative index numbers for arrays like you can in Python (this will throw a runtime error). You can add something to the start of an array by using .insert(_:at:) – you'd have to insert the value _ at index 0.
 
