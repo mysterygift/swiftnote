@@ -25,7 +25,7 @@ struct Developer {
 }
 ```
 
-# Accessing/Modifying Dicts
+## Accessing/Modifying Dicts
 
 Possible through methods, properties and "subscript syntax". The .count property is shared with arrays.
 
@@ -63,7 +63,21 @@ if let airportName = airports["DXB"] {
 
 KV pairs can be removed by setting the key equal to nil/using the .removeValue(forKey:) method, returning the REMOVED value/nil if no value existed.
 
-# Iterating Over a Dict
+## Dictionary Lookups
+
+When looking up a key in a dictionary as part of a closure be warned, dictionary subscripts return OPTIONALS as the lookup can fail if the key doesn't exist (so they need unwrapping) – this is the case if you're passing in an expression as the lookup. e.g:
+
+```swift
+
+let value = dictionary[key] ?? defaultValue
+
+// Example
+let digitName = digitNames[number % 10] ?? "Unknown or invalid key"
+
+```
+
+
+## Iterating Over a Dict
 
 Each item is returned as a tuple (key, value), which can be decomposed into temporary constants or variables. See below. We can also pass a tuple to the for-in loop, allowing us to access both the key AND the value in any executed code.
 
@@ -99,4 +113,4 @@ let sortedKeysDescending = airport.keys.sorted { $0 > $1 }
 print (sortedKeysDescending) // Outputs: ["LHR", "DUB", "DXB"]
 ```
 
-I will write more notes on sorting in a different section as this gets into closures and defining different sorting algorithms.
+See closures.md for more information on sorting.
