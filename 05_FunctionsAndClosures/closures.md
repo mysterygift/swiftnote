@@ -276,3 +276,50 @@ Capture lists are not collections, but special syntax that defines how closures 
 }
 
 ```
+
+## Closures Are Reference Types
+
+When assigning a function/closure to a constant/var you're setting said c/v to be a **reference** to the function/closure. If you assign a closure to two different constants/variables, both c/vs refer to the SAME closure.
+
+## Escaping Closures
+
+Closures "escape" when a closure passed to a function as an argument is called AFTER the function returns. You mark the parameter as @escaping when defining the function to allow this. You can think of these as helper jobs that occur after the main task is done.
+
+```swift
+var completionHandlers: [() -> Void] = []
+func someFunctionWithEscapingClosure(completionHandler: @escaping () -> Void) {
+    completionHandlers.append(completionHandler) // The closure passed in as completionHandler is appended to an array OUTSIDE the scope of this function.
+}
+```
+
+If we did not mark the closure parameter with @escaping, this would produce a compile time error.
+
+Escaping closures with .self have additional considerations that need to be made (if self refers to an instance of a class).
+
+*NB* To be honest this is really confusion so I'm just gonna leave this until I really need to understand it.
+
+
+## Autoclosures
+
+Closures automatically created to wrap an expression passed as an argument to a function, taking no args and returning the value of the wrapped expression.
+
+You may often call funcs that take autoclosures but you won't implement them often. Below is an example of how you can delay evaluation using a closure.
+
+```swift
+var customersInLine = ["Chris", "Alex", "Ewa", "Barry", "Daniella"]
+print(customersInLine.count)
+// Prints "5"
+
+
+let customerProvider = { customersInLine.remove(at: 0) }
+print(customersInLine.count)
+// Prints "5"
+
+
+print("Now serving \(customerProvider())!")
+// Prints "Now serving Chris!"
+print(customersInLine.count)
+// Prints "4"
+```
+
+Though the 1st element of the array is removed by the code within the closure, this doesn't happen until
