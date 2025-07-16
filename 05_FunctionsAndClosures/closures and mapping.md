@@ -36,7 +36,7 @@ var reversedNames = names.sorted(by: reverseAlphabetical)
 
 ```
 
-Looking at the body of reverseAlphabetical(), if the value of s1 is greater than the value of s2, the function will return true, showing that s1 should appear before s2. B is greater than A.
+Looking at the body of reverseAlphabetical(), if the value of s1 is greater than the value of s2, the function will return true, showing that s1 should appear before s2. B is greater than A (the unicode value of the character B is great than the unicode value of A).
 
 This is a lot for just a single-expression function, so let's use an in-line closure.
 
@@ -48,7 +48,7 @@ This is a lot for just a single-expression function, so let's use an in-line clo
 } // General form of closure expression syntax.
 ```
 
-Parameters in closures can be inouts, but they CANNOT have default gvalues. You can use variadics if you name the parameters. You can also have tuples as parameters/return types.
+Parameters in closures can be inouts, but they CANNOT have default values. You can use variadics if you name the parameters. You can also have tuples as parameters/return types.
 
 If we rewrite the reverseAlphabetical() as an inline closure:
 
@@ -64,7 +64,7 @@ reversedNames = names.sorted(by: { s1, s2 in return s1 > s2 })
 
 Because the function type of sorted(by:) makes it clear that it needs a Bool returned we can remove "return" from the above. This is the case with single-expression closures.
 
-## Shorthand Args
+## Shorthand Args, .map and .compactMap
 
 You just increase the number next to $ depending on the number of args ($0, $1, $2, $3 etc)
 
@@ -73,8 +73,132 @@ reversedNames = names.sorted(by: { $1 > $0 })
 ```
 
 You can even use operator methods here as they're all actually functions. > returns the same type for string comparison as the sorted(by:) method expects, so the following is valid and very idiomatic Swift code.
+
 ```swift
 reversedNames = names.sorted(by: >)
+```
+
+We can also use the .map(_:) method to apply an expression to each item of a collection, returning a new array. It can also return a different type to the one passed in (e.g. converting ints to strings).
+
+```swift
+var team = ["John", "Sally", "Arlo", "Finn", "Ash"]
+
+let uppercasedTeam = team.map { $0.uppercased() }
+print(uppercasedTeam)
+// Prints ["JOHN", "SALLY", "ARLO", "FINN", "ASH"]
+```
+
+Let's say we have an array of integers that we want to convert into strings. That can be done by:
+
+```swift
+let numbers = [1, 2, 3, 4, 5]
+let stringNumbers = numbers.map { String($0) }
+print(stringNumbers)
+// Prints ["1", "2", "3", "4", "5"]
+```
+
+But what if we wanted to do this the other way around? It's a bit more complicated because the Int() intialiser returns Int? (optional) because not all strings can be converted to valid integers. We would have to use either default values for invalid ints *{ Int($0) ?? -1#or another default value# }*, or use nil-coallescing to handle it *{ Int($0) ?? 0 }*.
+
+*.compactMap automatically removes nils and unwraps optionals.* It combines mapping with basic filtering. See below.
+
+```swift
+let unsortedData = ["1", "5", "Hello", "uwu", "93", "32"]
+let cleanedData = unsortedData.compactMap { Int($0) }.sorted() // You can append several methods as well!
+print(cleanedData) // Prints [1, 5, 32, 93]
+```
+
+Below are some examples of development use cases that I have annotated.
+
+```swift
+// Filtering and transforming an API response.
+
+struct User {
+    let id: Int
+    let name: String?
+    let email: String?
+}
+
+let users = [
+    User(id: 1, name: "Alice", email: "alice@example.com"),
+    User(id: 2, name: nil, email: "bob@example.com"),
+    User(id: 3, name: "Charlie", email: nil)
+]
+
+// Fetch users with only valid names.
+let usersWithNames = users.compactMap { $0.name }
+print(usersWithNames) // ["Alice", "Charlie"].
+
+// Fetch users with both names AND emails.
+let completeUsers = users.compactMap { $0 -> User? in // For each entry in the users array, return an optional User struct. "in" separates declaration from implementation.
+    guard let name = $0.name, let email = $0.email else { return nil }
+    return User(id: $0.id, name: name, email: email)
+}
+
+// Parsing JSON data where their may be fields missing. I've added context for getting this to appear in a view in Swift UI.
+
+struct Product {
+    let name: String
+    let price: Int
+}
+
+struct ProductListView: View {
+    @State private var products: [Product] = []
+
+    var body: some view {
+        NavigationView {
+            List(products) { product in // This applies the following to each item in the products array. product could have also been $0.
+                HStack { // Stack these horizontally.
+                    Text(product.name) // The name of the product (accessed with dot syntax).
+                    Spacer() // A dynamic spacer.
+                    Text("£\(product.price)") // The price of the product.
+                }
+            }
+        }
+        .navigationTitle("Products")
+    }
+    .onAppear { loadProducts() }
+
+    func loadProducts() {
+    let jsonArray: [[String: Any]] = [
+        ["name": "iPhone", "price": 999],
+        ["name": "iPad"], // Missing price
+        ["price": 599],   // Missing name
+        ["name": "MacBook", "price": 1299]
+    ]
+
+    let validProducts = jsonArray.compactMap { dict -> Product? in
+        guard let name = dict["name"] as? String,
+            let price = dict["price"] as? Int else {
+            return nil
+        }
+        return Product(name: name, price: price)
+    }
+    }
+}
+```
+
+Lastly, if is also common to chain .compactMap with other higher-order functions (like .filter or another .map).
+
+```swift
+struct NumberProcessorView: View {
+    @state private var processedNumbers: [Int] = []
+
+    let numbers = ["1", "2", "4", "5", "Hello", "8", "7", "13"]
+
+    var body: some View {
+        VStack {
+            Text("Processed: \(processedNumbers.map(String.init).joined(separator: ", "))") // String.init is a ref to the string initiliaser function, it is the same as {.number in String(number) } but more concise and readable.
+
+            Button("Process Numbers") {
+                processedNumbers = numbers
+                .compactMap { Int($0) } // Convert to int and filter out invalid entries/unwrap optionals.
+                .filter { $0 % 2 == 0 } // Filter out odd numbers.
+                .map { $0 * $0 } // Square them.
+            }
+        }
+        .padding()
+    }
+}
 ```
 
 ## Trailing Closures
@@ -245,11 +369,11 @@ You use either "weak", "unknown" [these two are reference capturing] or "capture
 * unowned: " will NEVER be nil while the closure exists.
     * No unwrapping, crashes if accessed after object dealloc.
 
-* capturedValue: Preserving the value of a var that may change later, creating multiple closures that capture diff values from the same variable, improving performance by capturing a compjuted value once rather than recalculating it each time.
+* capturedValue: Preserving the value of a var that may change later, creating multiple closures that capture diff values from the same variable, improving performance by capturing a computed value once rather than recalculating it each time.
     * Great because it can avoid subtle bugs in async code where vars can change between closure creation and execution.
 
 ```swift
-lazy var asHTML: () -> String = { [weak self] in // Sets up the capture list.
+lazy var asHTML: () -> String = { [weak self] (param1, param2) in // Sets up the capture list – the capture list is written in square brackets (NOT A COLLECTION).
     guard let self = self else { return "" }
     return "<\(self.name)>\(self.text ?? "")</\(self.name)>" }
 
@@ -259,7 +383,7 @@ lazy var asHTML: () -> String = { [unowned self] in
     return "<\(self.name)>\(self.text ?? "")</\(self.name)>" } // returns "<p>hello!/<p>
 ```
 
-Capture lists are not collections, but special syntax that defines how closures capture references from variables in surrounding scope.
+Capture lists are not collections, but special syntax that defines how closures capture references from variables in surrounding scope, they tell Swift *"When you create this closure, here's what I want you to capture and HOW I want you to capture it"*. *Param1/2* in the example above refer to parameters that the closure accepts (e.g. s1/s2 when using the sort method). The *in* keyword separates the declaration from implementation.
 
 * Defined at the start of a closure using [], before the parameter list,
 * Specifies how certain external vars should be captured in the closure (weak/unowned).
@@ -286,9 +410,10 @@ When assigning a function/closure to a constant/var you're setting said c/v to b
 Closures "escape" when a closure passed to a function as an argument is called AFTER the function returns. You mark the parameter as @escaping when defining the function to allow this. You can think of these as helper jobs that occur after the main task is done.
 
 ```swift
-var completionHandlers: [() -> Void] = []
+// Stores closures that can be executed after the function returns (escaping closures).
+var completionHandlers: [() -> Void] = [] // completionHandlers is an ARRAY of CLOSURES.
 func someFunctionWithEscapingClosure(completionHandler: @escaping () -> Void) {
-    completionHandlers.append(completionHandler) // The closure passed in as completionHandler is appended to an array OUTSIDE the scope of this function.
+    completionHandlers.append(completionHandler) // The closure passed in as "completionHandler" is appended to an array OUTSIDE the scope of this function.
 }
 ```
 
@@ -296,14 +421,11 @@ If we did not mark the closure parameter with @escaping, this would produce a co
 
 Escaping closures with .self have additional considerations that need to be made (if self refers to an instance of a class).
 
-*NB* To be honest this is really confusion so I'm just gonna leave this until I really need to understand it.
-
-
 ## Autoclosures
 
 Closures automatically created to wrap an expression passed as an argument to a function, taking no args and returning the value of the wrapped expression.
 
-You may often call funcs that take autoclosures but you won't implement them often. Below is an example of how you can delay evaluation using a closure.
+You may often call funcs that take autoclosures but you won't implement them often (because they can make your code hard to read when used in excess). Below is an example of how you can delay evaluation using a closure.
 
 ```swift
 var customersInLine = ["Chris", "Alex", "Ewa", "Barry", "Daniella"]
@@ -322,4 +444,15 @@ print(customersInLine.count)
 // Prints "4"
 ```
 
-Though the 1st element of the array is removed by the code within the closure, this doesn't happen until
+Though the 1st element of the array is removed by the code within the closure, this doesn't happen until the closure is actually called. *If the closure is never called, the expression within the closure is never evaluated, so the object at index 0 is never removed.* We'll rewrite the above code using an autoclosure (it automatically converts the string type into a closure, because the parameter is marked with @autoclosure).
+
+```swift
+var customersInLine = ["Chris", "Alex", "Ewa", "Barry", "Daniella"]
+
+func serve(customer customerProvider: @autoclosure () -> String) { // customerProvider is a function that takes no parameters and outputs a string.
+    print("Now serving: \(customerProvider())!") // We pass that closure into this print method.
+}
+
+serve(customer: customersInLine.remove(at: 0) // Prints "Now serving: Chris!"
+
+```
